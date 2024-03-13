@@ -9,8 +9,7 @@
 // namespace fs = std::experimental::filesystem;
 // #endif
 
-#include "components/log.hpp"
-#include "civetweb.h"
+#include "handlers/authHandler.hpp"
 
 using namespace std;
 
@@ -59,12 +58,9 @@ void startHHTPServer(int port, int sslPort, string sslPath)
         logger->error("Error mg_start - civetweb is NULL, HTTP server is not running !");
         return;
     }
-    /*
-    //авторизация
-    mg_set_request_handler(civetweb, "/entek/api/info",     AuthHandler::HTTP_Info, NULL);
-    mg_set_request_handler(civetweb, "/entek/api/login$",   AuthHandler::RestAuthLogin, NULL);
-    mg_set_request_handler(civetweb, "/entek/api/logout$",  AuthHandler::RestAuthLogout, NULL);
-    mg_set_request_handler(civetweb, "/entek/api/ping$",    AuthHandler::RestPing, NULL);*/
+    
+    // auth
+    mg_set_request_handler(civetweb, "/login", AuthHandler::login, NULL);
 }
 
 void StopHTTPserver(void)
@@ -98,7 +94,7 @@ int main(int, char **)
         startHHTPServer(8849, 0, "");
 
         // waiting pushing Esc
-        logger->info("Press ESC to stop server");
+        logger->info("Press ESC to stop Server");
         int counter = 0;
         int key = 0;
 #ifdef __linux__
@@ -131,8 +127,8 @@ int main(int, char **)
     }
     catch (exception &e)
     {
-        // if (civetweb)
-        //     StopHTTPserver();
+        if (civetweb)
+            StopHTTPserver();
 
         if (logger)
         {
