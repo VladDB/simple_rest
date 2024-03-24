@@ -10,6 +10,7 @@
 // #endif
 
 #include "handlers/authHandler.hpp"
+#include "repository/tdb.hpp"
 
 using namespace std;
 
@@ -18,7 +19,7 @@ static struct mg_context *civetweb = NULL;
 
 int cvw_log_message(const struct mg_connection *conn, const char *message)
 {
-    //PRINT(message);
+    // PRINT(message);
     return 1;
 }
 
@@ -34,23 +35,20 @@ void startHHTPServer(int port, int sslPort, string sslPath)
     if (sslPort != 0 && sslPath.length() != 0)
         sPort = sPort + "," + to_string(sslPort) + "s";
     else
-        logger->error("For using SSL specify port and full path to certificate in RestAPI.ini");
+        logger->error("For using SSL specify port and full path to certificate in server_settings.ini");
 
     logger->info("HTTP interface port: " + sPort);
 
     static const char *cvw_options[] =
-    {
-        //"document_root", REST_INFOBASE.c_str(),
-        "listening_ports", sPort.c_str(),
-        "num_threads", "10",
-        "request_timeout_ms", "10000",
-        "ssl_certificate", sslPath.c_str(),
-        //"access_log_file", (REST_BinPath + "civet.log").c_str(),
-        //"error_log_file", (REST_BinPath + "error.log").c_str(),
-        //"websocket_timeout_ms", "3600000",
-        //"enable_auth_domain_check", "yes",
-        0
-    };
+        {
+            //"document_root", REST_INFOBASE.c_str(),
+            "listening_ports", sPort.c_str(),
+            "num_threads", "10",
+            "request_timeout_ms", "10000",
+            "ssl_certificate", sslPath.c_str(),
+            //"websocket_timeout_ms", "3600000",
+            //"enable_auth_domain_check", "yes",
+            0};
 
     civetweb = mg_start(&callbacks, 0, cvw_options);
     if (!civetweb)
@@ -58,7 +56,7 @@ void startHHTPServer(int port, int sslPort, string sslPath)
         logger->error("Error mg_start - civetweb is NULL, HTTP server is not running !");
         return;
     }
-    
+
     // auth
     mg_set_request_handler(civetweb, "/login", AuthHandler::login, NULL);
 }
@@ -91,6 +89,9 @@ int main(int, char **)
         logger->info("----------------------------------------------");
         logger->info("Start Server");
 
+        logger->info("Prepare DB");
+        MainDB.PrepareDb();
+
         startHHTPServer(8849, 0, "");
 
         // waiting pushing Esc
@@ -121,7 +122,7 @@ int main(int, char **)
 #ifdef __linux__
         term_reset();
 #endif // __linux__
-        
+
         StopHTTPserver();
         deinit_logger();
     }

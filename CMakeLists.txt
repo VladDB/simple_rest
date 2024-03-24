@@ -16,6 +16,13 @@ set(LOGGER_SRC ${COMPONENTS_DIR}/log.hpp
 set(BASE64_SRC ${COMPONENTS_DIR}/base64.h
                ${COMPONENTS_DIR}/base64.cpp)
 
+# repository dir
+set(REPOSITORY_DIR ${CMAKE_SOURCE_DIR}/src/repository)
+
+#include class for db connection
+set(TDB_SRC ${REPOSITORY_DIR}/tdb.hpp
+            ${REPOSITORY_DIR}/tdb.cpp)
+
 # include civetweb
 set(CIVETWEB_INC ${CMAKE_SOURCE_DIR}/include/civetweb_1.16/include)
 set(CIVETWEB_SRC ${CMAKE_SOURCE_DIR}/include/civetweb_1.16/src)
@@ -33,14 +40,20 @@ set(HANDLERS_DIR ${CMAKE_SOURCE_DIR}/src/handlers)
 set(HANDLERS_SRC ${HANDLERS_DIR}/authHandler.hpp
                  ${HANDLERS_DIR}/authHandler.cpp)
 
+
+# Find SOCI package
+find_package(SOCI REQUIRED)
+include_directories(${SOCI_INCLUDE_DIRS})
+
 add_executable(simple_rest src/main.cpp
                            ${LOGGER_SRC}
                            ${BASE64_SRC}
                            ${CIVETWEB_SRC_C}
                            ${JSON_SRC}
-                           ${HANDLERS_SRC})
+                           ${HANDLERS_SRC}
+                           ${TDB_SRC})
 
-target_link_libraries(simple_rest rpcrt4 ws2_32)
+target_link_libraries(simple_rest rpcrt4 ws2_32 soci_core_4_0 soci_postgresql_4_0)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})

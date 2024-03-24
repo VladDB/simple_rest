@@ -65,10 +65,11 @@ int AuthHandler::login(mg_connection *conn, void *cbdata)
                 "Content-Type: application/json; charset=UTF-8\r\n"
                 "Cache-Control: no-cache\r\n"
                 "Content-Length: " +
-                to_string(answJson.dump().length()) + "\r\n"
-                                                      "Access-Control-Allow-Origin: *\r\n"
-                                                      "Connection: close\r\n"
-                                                      "\r\n";
+                to_string(answJson.dump().length()) +
+                "\r\n"
+                "Access-Control-Allow-Origin: *\r\n"
+                "Connection: close\r\n"
+                "\r\n";
 
             S.append(answJson.dump());
         }
@@ -98,7 +99,9 @@ int AuthHandler::login(mg_connection *conn, void *cbdata)
 
         S = "HTTP/1.1 500\r\n"
             "Content-Type: application/json; charset=UTF-8\r\n"
-            "Content-Length: " + to_string(answJson.dump().length()) + "\r\n"
+            "Content-Length: " +
+            to_string(answJson.dump().length()) +
+            "\r\n"
             "Cache-Control: no-cache\r\n"
             "Access-Control-Allow-Origin: *\r\n"
             "Connection: close\r\n"

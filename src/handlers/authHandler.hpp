@@ -19,9 +19,10 @@ using json = nlohmann::json;
 
 struct RestSession
 {
-    string userName;
-    string token;
-    string remoteAdr;
+    string userName = "";
+    string psw = "";
+    string token = "";
+    string remoteAdr = "";
     time_t tokenCreated;
     time_t timeOfLogin;
 };
