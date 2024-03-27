@@ -15,6 +15,7 @@ int AuthHandler::login(mg_connection *conn, void *cbdata)
         const char *header = mg_get_header(conn, "Authorization");
         if (header != NULL)
         {
+            // get username and password
             const string forDecode = header;
             size_t pos = forDecode.find(" ");
             vector<BYTE> decodeData = base64_decode(forDecode.substr(pos + 1));
@@ -25,6 +26,7 @@ int AuthHandler::login(mg_connection *conn, void *cbdata)
         }
 
         const mg_request_info *info = mg_get_request_info(conn);
+        // check user address
         if (info->remote_addr != NULL)
             RSession.remoteAdr = info->remote_addr;
         else
