@@ -1,16 +1,12 @@
 #include "authHandler.hpp"
 
-vector<RestSession> RestSessions;
-
 int AuthHandler::login(mg_connection *conn, void *cbdata)
 {
     json answJson;
     string S = "";
     try
     {
-        RestSession RSession;
-        string inUser = "";
-        string inPass = "";
+        UserModel user;
 
         const char *header = mg_get_header(conn, "Authorization");
         if (header != NULL)
@@ -21,46 +17,33 @@ int AuthHandler::login(mg_connection *conn, void *cbdata)
             vector<BYTE> decodeData = base64_decode(forDecode.substr(pos + 1));
             string decode(decodeData.begin(), decodeData.end());
             pos = decode.find(":");
-            inUser = decode.substr(0, pos);
-            inPass = decode.substr(pos + 1);
+            user.username = decode.substr(0, pos);
+            user.password = decode.substr(pos + 1);
         }
 
         const mg_request_info *info = mg_get_request_info(conn);
         // check user address
         if (info->remote_addr != NULL)
-            RSession.remoteAdr = info->remote_addr;
+            user.ip_addr = info->remote_addr;
         else
-            RSession.remoteAdr = "Unknown";
+            user.ip_addr = "Unknown";
 
-        // if (!inUser.empty() && checkUsernameAndPassword(inUser, inPass, RSession))
-        if (true)
+        // get user ID, check if he exist
+        user.id = UserService::GetUserId(user);
+        if (user.id < 0)
+            throw runtime_error("User does not exist");
+
+        if (UserService::CheckUserPassword(user))
         {
-#ifdef __linux__
-            uuid_t uu;
-            uuid_generate_random(uu);
-            char *genUuid = (char *)malloc(37);
-            uuid_unparse(uu, genUuid);
-            RSession.token = genUuid;
-            if (genUuid)
-                free(genUuid);
-#else
-            UUID uuid;
-            UuidCreate(&uuid);
-            unsigned char *str;
-            UuidToStringA(&uuid, &str);
-            RSession.token = (char *)str;
-            RpcStringFreeA(&str);
-#endif // __linux__
+            SessionModel session;
+            session.userId = user.id;
+            // create new session for user
+            session.token = SessionsService::CreateSession(session, user.ip_addr);
 
-            time(&RSession.tokenCreated);
+            logger->info("New session by {}, token: {}", user.username, session.token);
 
-            RSession.timeOfLogin = RSession.tokenCreated;
-
-            RestSessions.push_back(RSession);
-            logger->info("New session by {}, token: {}", RSession.userName, RSession.token);
-
-            answJson["token"] = RSession.token;
-            answJson["name"] = RSession.userName;
+            answJson["data"]["token"] = session.token;
+            answJson["data"]["name"] = user.username;
             answJson["result"] = "OK";
 
             S = "HTTP/1.1 200 OK\r\n"
@@ -77,9 +60,10 @@ int AuthHandler::login(mg_connection *conn, void *cbdata)
         }
         else
         {
-            logger->info("Incorrect username or password! {}, ACCESS DENIED!", inUser);
+            logger->info("Incorrect username or password! {}, ACCESS DENIED!", user.username);
 
-            answJson["result"] = "Bad password or username";
+            answJson["result"] = "Error";
+            answJson["data"]["info"] = "Incorrect password or username, ACCESS DENIED";
 
             S = "HTTP/1.1 401\r\n"
                 "Content-Type: application/json; charset=UTF-8\r\n"
@@ -93,21 +77,211 @@ int AuthHandler::login(mg_connection *conn, void *cbdata)
     }
     catch (exception &e)
     {
-        logger->error("AuthHandler::RestAuthLogin: {}", e.what());
+        logger->error("AuthHandler::login: {}", e.what());
 
-        string err = "Server error: ";
-        err.append(e.what());
-        answJson["result"] = err;
+        answJson["result"] = "Error";
+        answJson["data"]["info"] = e.what();
 
-        S = "HTTP/1.1 500\r\n"
+        S = "HTTP/1.1 200 OK\r\n"
             "Content-Type: application/json; charset=UTF-8\r\n"
+            "Cache-Control: no-cache\r\n"
             "Content-Length: " +
             to_string(answJson.dump().length()) +
             "\r\n"
-            "Cache-Control: no-cache\r\n"
             "Access-Control-Allow-Origin: *\r\n"
             "Connection: close\r\n"
             "\r\n";
+
+        S.append(answJson.dump());
+    }
+
+    mg_printf(conn, S.c_str());
+    return 1;
+}
+
+int AuthHandler::logout(mg_connection *conn, void *cbdata)
+{
+    json answJson;
+    string S = "";
+    try
+    {
+        UserModel user;
+
+        string inToken = "";
+
+        const char *header = mg_get_header(conn, "Pragma");
+        if (header != NULL)
+        {
+            const string Pragma = header;
+            size_t pos = Pragma.find_first_of("=");
+            if (pos != string::npos)
+                inToken = Pragma.substr(pos + 1);
+        }
+
+        if (inToken.empty())
+            throw std::runtime_error("Empty Pragma (token)");
+
+        // get user ID, check if he exist
+        user = UserService::GetUserByToken(inToken);
+        if (user.id < 0)
+            throw runtime_error("User does not exist");
+
+        // check user address
+        const mg_request_info *info = mg_get_request_info(conn);
+        if (info->remote_addr != NULL)
+            user.ip_addr = info->remote_addr;
+
+        if (SessionsService::CheckSession(inToken, user.ip_addr))
+        {
+            SessionsService::DeleteSession(inToken);
+
+            logger->info("The session was closed by {}, token: {}", user.username, inToken);
+
+            answJson["data"]["info"] = "The session was closed";
+            answJson["result"] = "OK";
+
+            S = "HTTP/1.1 200 OK\r\n"
+                "Content-Type: application/json; charset=UTF-8\r\n"
+                "Cache-Control: no-cache\r\n"
+                "Content-Length: " +
+                to_string(answJson.dump().length()) +
+                "\r\n"
+                "Access-Control-Allow-Origin: *\r\n"
+                "Connection: close\r\n"
+                "\r\n";
+
+            S.append(answJson.dump());
+        }
+        else
+        {
+            logger->info("Incorrect username or password! {}, ACCESS DENIED!", user.username);
+
+            answJson["result"] = "Error";
+            answJson["data"]["info"] = "Bad password or username";
+
+            S = "HTTP/1.1 401\r\n"
+                "Content-Type: application/json; charset=UTF-8\r\n"
+                "Cache-Control: no-cache\r\n"
+                "Access-Control-Allow-Origin: *\r\n"
+                "Connection: close\r\n"
+                "\r\n";
+
+            S.append(answJson.dump());
+        }
+    }
+    catch (exception &e)
+    {
+        logger->error("AuthHandler::logout: {}", e.what());
+
+        answJson["result"] = "Error";
+        answJson["data"]["info"] = e.what();
+
+        S = "HTTP/1.1 200 OK\r\n"
+            "Content-Type: application/json; charset=UTF-8\r\n"
+            "Cache-Control: no-cache\r\n"
+            "Content-Length: " +
+            to_string(answJson.dump().length()) +
+            "\r\n"
+            "Access-Control-Allow-Origin: *\r\n"
+            "Connection: close\r\n"
+            "\r\n";
+
+        S.append(answJson.dump());
+    }
+
+    mg_printf(conn, S.c_str());
+    return 1;
+}
+
+int AuthHandler::ping(mg_connection *conn, void *cbdata)
+{
+    json answJson;
+    string S = "";
+    try
+    {
+        UserModel user;
+
+        string inToken = "";
+
+        const char *header = mg_get_header(conn, "Pragma");
+        if (header != NULL)
+        {
+            const string Pragma = header;
+            size_t pos = Pragma.find_first_of("=");
+            if (pos != string::npos)
+                inToken = Pragma.substr(pos + 1);
+        }
+
+        if (!inToken.empty())
+        {
+            // get user ID, check if he exist
+            user = UserService::GetUserByToken(inToken);
+            if (user.id < 0)
+                throw runtime_error("User does not exist");
+
+            // check user address
+            const mg_request_info *info = mg_get_request_info(conn);
+            if (info->remote_addr != NULL)
+                user.ip_addr = info->remote_addr;
+        }
+
+        if (SessionsService::CheckSession(inToken, user.ip_addr))
+        {
+            // get current time
+            time_t now = time(0);
+            tm nowTm = *localtime(&now);
+            char nowStr[31];
+            strftime(nowStr, 30, "%Y-%m-%dT%H:%M:%S.000", &nowTm);
+            
+            answJson["data"]["info"] = "OK";
+            answJson["data"]["time"] = nowStr;
+            answJson["result"] = "OK";
+
+            S = "HTTP/1.1 200 OK\r\n"
+                "Content-Type: application/json; charset=UTF-8\r\n"
+                "Cache-Control: no-cache\r\n"
+                "Content-Length: " +
+                to_string(answJson.dump().length()) +
+                "\r\n"
+                "Access-Control-Allow-Origin: *\r\n"
+                "Connection: close\r\n"
+                "\r\n";
+
+            S.append(answJson.dump());
+        }
+        else
+        {
+            answJson["result"] = "Error";
+            answJson["data"]["info"] = "Unauthorized";
+
+            S = "HTTP/1.1 200\r\n"
+                "Content-Type: application/json; charset=UTF-8\r\n"
+                "Cache-Control: no-cache\r\n"
+                "Access-Control-Allow-Origin: *\r\n"
+                "Connection: close\r\n"
+                "\r\n";
+
+            S.append(answJson.dump());
+        }
+    }
+    catch (exception &e)
+    {
+        logger->error("AuthHandler::ping: {}", e.what());
+
+        answJson["result"] = "Error";
+        answJson["data"]["info"] = e.what();
+
+        S = "HTTP/1.1 200 OK\r\n"
+            "Content-Type: application/json; charset=UTF-8\r\n"
+            "Cache-Control: no-cache\r\n"
+            "Content-Length: " +
+            to_string(answJson.dump().length()) +
+            "\r\n"
+            "Access-Control-Allow-Origin: *\r\n"
+            "Connection: close\r\n"
+            "\r\n";
+
+        S.append(answJson.dump());
     }
 
     mg_printf(conn, S.c_str());

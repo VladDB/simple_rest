@@ -10,7 +10,7 @@
 // #endif
 
 #include "handlers/authHandler.hpp"
-#include "repository/tdb.hpp"
+#include "components/tdb.hpp"
 
 using namespace std;
 
@@ -41,7 +41,7 @@ void startHHTPServer(int port, int sslPort, string sslPath)
 
     static const char *cvw_options[] =
         {
-            //"document_root", REST_INFOBASE.c_str(),
+            //"document_root", INFOBASE.c_str(),
             "listening_ports", sPort.c_str(),
             "num_threads", "10",
             "request_timeout_ms", "10000",
@@ -59,6 +59,8 @@ void startHHTPServer(int port, int sslPort, string sslPath)
 
     // auth
     mg_set_request_handler(civetweb, "/login", AuthHandler::login, NULL);
+    mg_set_request_handler(civetweb, "/logout", AuthHandler::logout, NULL);
+    mg_set_request_handler(civetweb, "/ping", AuthHandler::ping, NULL);
 }
 
 void StopHTTPserver(void)

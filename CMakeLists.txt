@@ -16,12 +16,20 @@ set(LOGGER_SRC ${COMPONENTS_DIR}/log.hpp
 set(BASE64_SRC ${COMPONENTS_DIR}/base64.h
                ${COMPONENTS_DIR}/base64.cpp)
 
-# repository dir
-set(REPOSITORY_DIR ${CMAKE_SOURCE_DIR}/src/repository)
-
 #include class for db connection
-set(TDB_SRC ${REPOSITORY_DIR}/tdb.hpp
-            ${REPOSITORY_DIR}/tdb.cpp)
+set(TDB_SRC ${COMPONENTS_DIR}/tdb.hpp
+            ${COMPONENTS_DIR}/tdb.cpp)
+
+# services dir
+set(SERVICES_DIR ${CMAKE_SOURCE_DIR}/src/services)
+
+#include user service
+set(USER_SERVICE_SRC ${SERVICES_DIR}/userService.hpp
+                     ${SERVICES_DIR}/userService.cpp)
+
+#include session service
+set(SESSION_SERVICE_SRC ${SERVICES_DIR}/sessionService.hpp
+                     ${SERVICES_DIR}/sessionService.cpp)
 
 # include civetweb
 set(CIVETWEB_INC ${CMAKE_SOURCE_DIR}/include/civetweb_1.16/include)
@@ -51,7 +59,9 @@ add_executable(simple_rest src/main.cpp
                            ${CIVETWEB_SRC_C}
                            ${JSON_SRC}
                            ${HANDLERS_SRC}
-                           ${TDB_SRC})
+                           ${TDB_SRC}
+                           ${USER_SERVICE_SRC}
+                           ${SESSION_SERVICE_SRC})
 
 target_link_libraries(simple_rest rpcrt4 ws2_32 soci_core_4_0 soci_postgresql_4_0)
 
