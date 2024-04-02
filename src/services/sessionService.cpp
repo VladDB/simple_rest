@@ -44,8 +44,8 @@ std::string SessionsService::CreateSession(SessionModel session, std::string ip)
         logger->error("Error in SessionsService::CreateSession: {}", e.what());
         std::string err = "Error while create session: ";
         err.append(e.what());
-        throw std::runtime_error(err);
         MainDB.FreeSession();
+        throw std::runtime_error(err);
     }
 
     return newToken;
@@ -91,8 +91,8 @@ bool SessionsService::CheckSession(std::string token, std::string ip)
         logger->error("Error in SessionsService::CheckSession: {}", e.what());
         std::string err = "Error while create session: ";
         err.append(e.what());
-        throw std::runtime_error(err);
         MainDB.FreeSession();
+        throw std::runtime_error(err);
     }
     return result;
 }
@@ -126,8 +126,8 @@ void SessionsService::DeleteSession(std::string token)
         logger->error("Error in SessionsService::DeleteSession: {}", e.what());
         std::string err = "Error while delete session: ";
         err.append(e.what());
-        throw std::runtime_error(err);
         MainDB.FreeSession();
+        throw std::runtime_error(err);
     }
 }
 
@@ -153,7 +153,7 @@ void SessionsService::CheckAllSessionsTime()
         logger->error("Error in SessionsService::CreateSession: {}", e.what());
         std::string err = "Error while create session: ";
         err.append(e.what());
-        throw std::runtime_error(err);
         MainDB.FreeSession();
+        throw std::runtime_error(err);
     }
 }

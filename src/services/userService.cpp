@@ -34,8 +34,8 @@ std::string UserService::CreateUser(UserModel user)
         logger->error("Error in UserService::CreateUser: {}", e.what());
         std::string err = "Error while creating user: ";
         err.append(e.what());
-        throw std::runtime_error(err);
         MainDB.FreeSession();
+        throw std::runtime_error(err);
     }
     return result;
 }
@@ -69,8 +69,8 @@ UserModel UserService::GetUserById(int id)
         logger->error("Error in UserService::GetUserById: {}", e.what());
         std::string err = "Error while getting user: ";
         err.append(e.what());
-        throw std::runtime_error(err);
         MainDB.FreeSession();
+        throw std::runtime_error(err);
     }
 
     return user;
@@ -105,8 +105,8 @@ UserModel UserService::GetUserByToken(std::string token)
         logger->error("Error in UserService::GetUserById: {}", e.what());
         std::string err = "Error while getting user: ";
         err.append(e.what());
-        throw std::runtime_error(err);
         MainDB.FreeSession();
+        throw std::runtime_error(err);
     }
 
     return user;
@@ -136,8 +136,8 @@ int UserService::GetUserId(UserModel user)
         logger->error("Error in UserService::GetUserId: {}", e.what());
         std::string err = "Error while getting user id: ";
         err.append(e.what());
-        throw std::runtime_error(err);
         MainDB.FreeSession();
+        throw std::runtime_error(err);
     }
 
     return id;
@@ -145,6 +145,19 @@ int UserService::GetUserId(UserModel user)
 
 void UserService::UpdateUser(UserModel updatedUser)
 {
+    try
+    {
+        *MainDB.sql << "UPDATE USERS SET username = :P0 WHERE id = :P1",
+            soci::use(updatedUser.username), soci::use(updatedUser.id);
+    }
+    catch (const std::exception &e)
+    {
+        logger->error("Error in UserService::UpdateUser: {}", e.what());
+        std::string err = "Error while updating user: ";
+        err.append(e.what());
+        MainDB.FreeSession();
+        throw std::runtime_error(err);
+    }
 }
 
 void UserService::DeleteUser(int id)
@@ -159,8 +172,8 @@ void UserService::DeleteUser(int id)
         logger->error("Error in UserService::DeleteUser: {}", e.what());
         std::string err = "Error while delete user: ";
         err.append(e.what());
-        throw std::runtime_error(err);
         MainDB.FreeSession();
+        throw std::runtime_error(err);
     }
 }
 
@@ -187,8 +200,8 @@ bool UserService::CheckUserPassword(UserModel user)
         logger->error("Error in UserService::CheckUserPassword: {}", e.what());
         std::string err = "Error while check password: ";
         err.append(e.what());
-        throw std::runtime_error(err);
         MainDB.FreeSession();
+        throw std::runtime_error(err);
     }
 
     return result;

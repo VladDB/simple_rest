@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.17.0)
+cmake_minimum_required(VERSION 3.27.0)
 project(simple_rest VERSION 0.1.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDART 17)
@@ -16,18 +16,18 @@ set(LOGGER_SRC ${COMPONENTS_DIR}/log.hpp
 set(BASE64_SRC ${COMPONENTS_DIR}/base64.h
                ${COMPONENTS_DIR}/base64.cpp)
 
-#include class for db connection
+# include class for db connection
 set(TDB_SRC ${COMPONENTS_DIR}/tdb.hpp
             ${COMPONENTS_DIR}/tdb.cpp)
 
 # services dir
 set(SERVICES_DIR ${CMAKE_SOURCE_DIR}/src/services)
 
-#include user service
+# include user service
 set(USER_SERVICE_SRC ${SERVICES_DIR}/userService.hpp
                      ${SERVICES_DIR}/userService.cpp)
 
-#include session service
+# include session service
 set(SESSION_SERVICE_SRC ${SERVICES_DIR}/sessionService.hpp
                      ${SERVICES_DIR}/sessionService.cpp)
 
@@ -38,15 +38,29 @@ include_directories(${CIVETWEB_INC})
 include_directories(${CIVETWEB_SRC})
 set(CIVETWEB_SRC_C ${CMAKE_SOURCE_DIR}/include/civetweb_1.16/src/civetweb.c)
 
-#include nlohmann json
+# include nlohmann json
 set(JSON_DIR ${CMAKE_SOURCE_DIR}/include/json/include)
 include_directories(${JSON_DIR})
 set(JSON_SRC ${JSON_DIR}/nlohmann/json.hpp)
 
-#include handlers
+# include handlers
 set(HANDLERS_DIR ${CMAKE_SOURCE_DIR}/src/handlers)
-set(HANDLERS_SRC ${HANDLERS_DIR}/authHandler.hpp
+
+# global functions for handlers
+set(GLOBAL_HANDLER_SRC ${HANDLERS_DIR}/globalsForHandlers.hpp
+                      ${HANDLERS_DIR}/globalsForHandlers.cpp)  
+
+# auth handler
+set(AUTH_HANDLER_SRC ${HANDLERS_DIR}/authHandler.hpp
                  ${HANDLERS_DIR}/authHandler.cpp)
+
+# user handler
+set(USER_HANDLER_SRC ${HANDLERS_DIR}/userHandler.hpp
+                     ${HANDLERS_DIR}/userHandler.cpp)
+
+set(HANDLERS_SRC ${GLOBAL_HANDLER_SRC}
+                 ${AUTH_HANDLER_SRC}
+                 ${USER_HANDLER_SRC})
 
 
 # Find SOCI package
@@ -64,6 +78,8 @@ add_executable(simple_rest src/main.cpp
                            ${SESSION_SERVICE_SRC})
 
 target_link_libraries(simple_rest rpcrt4 ws2_32 soci_core_4_0 soci_postgresql_4_0)
+
+# target_compile_options(simple_rest PRIVATE -std=c++17)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})

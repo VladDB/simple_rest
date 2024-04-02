@@ -46,17 +46,7 @@ int AuthHandler::login(mg_connection *conn, void *cbdata)
             answJson["data"]["name"] = user.username;
             answJson["result"] = "OK";
 
-            S = "HTTP/1.1 200 OK\r\n"
-                "Content-Type: application/json; charset=UTF-8\r\n"
-                "Cache-Control: no-cache\r\n"
-                "Content-Length: " +
-                to_string(answJson.dump().length()) +
-                "\r\n"
-                "Access-Control-Allow-Origin: *\r\n"
-                "Connection: close\r\n"
-                "\r\n";
-
-            S.append(answJson.dump());
+            S = GlobalsForHandlers::PrepareAnswer(RESP_TYPES::OK_200, answJson.dump());
         }
         else
         {
@@ -64,15 +54,8 @@ int AuthHandler::login(mg_connection *conn, void *cbdata)
 
             answJson["result"] = "Error";
             answJson["data"]["info"] = "Incorrect password or username, ACCESS DENIED";
-
-            S = "HTTP/1.1 401\r\n"
-                "Content-Type: application/json; charset=UTF-8\r\n"
-                "Cache-Control: no-cache\r\n"
-                "Access-Control-Allow-Origin: *\r\n"
-                "Connection: close\r\n"
-                "\r\n";
-
-            S.append(answJson.dump());
+            
+            S = GlobalsForHandlers::PrepareAnswer(RESP_TYPES::Unauthorized_401, answJson.dump());
         }
     }
     catch (exception &e)
@@ -82,17 +65,7 @@ int AuthHandler::login(mg_connection *conn, void *cbdata)
         answJson["result"] = "Error";
         answJson["data"]["info"] = e.what();
 
-        S = "HTTP/1.1 200 OK\r\n"
-            "Content-Type: application/json; charset=UTF-8\r\n"
-            "Cache-Control: no-cache\r\n"
-            "Content-Length: " +
-            to_string(answJson.dump().length()) +
-            "\r\n"
-            "Access-Control-Allow-Origin: *\r\n"
-            "Connection: close\r\n"
-            "\r\n";
-
-        S.append(answJson.dump());
+        S = GlobalsForHandlers::PrepareAnswer(RESP_TYPES::Unauthorized_401, answJson.dump());
     }
 
     mg_printf(conn, S.c_str());
@@ -140,17 +113,7 @@ int AuthHandler::logout(mg_connection *conn, void *cbdata)
             answJson["data"]["info"] = "The session was closed";
             answJson["result"] = "OK";
 
-            S = "HTTP/1.1 200 OK\r\n"
-                "Content-Type: application/json; charset=UTF-8\r\n"
-                "Cache-Control: no-cache\r\n"
-                "Content-Length: " +
-                to_string(answJson.dump().length()) +
-                "\r\n"
-                "Access-Control-Allow-Origin: *\r\n"
-                "Connection: close\r\n"
-                "\r\n";
-
-            S.append(answJson.dump());
+            S = GlobalsForHandlers::PrepareAnswer(RESP_TYPES::OK_200, answJson.dump());
         }
         else
         {
@@ -159,14 +122,7 @@ int AuthHandler::logout(mg_connection *conn, void *cbdata)
             answJson["result"] = "Error";
             answJson["data"]["info"] = "Bad password or username";
 
-            S = "HTTP/1.1 401\r\n"
-                "Content-Type: application/json; charset=UTF-8\r\n"
-                "Cache-Control: no-cache\r\n"
-                "Access-Control-Allow-Origin: *\r\n"
-                "Connection: close\r\n"
-                "\r\n";
-
-            S.append(answJson.dump());
+            S = GlobalsForHandlers::PrepareAnswer(RESP_TYPES::Unauthorized_401, answJson.dump());
         }
     }
     catch (exception &e)
@@ -176,17 +132,7 @@ int AuthHandler::logout(mg_connection *conn, void *cbdata)
         answJson["result"] = "Error";
         answJson["data"]["info"] = e.what();
 
-        S = "HTTP/1.1 200 OK\r\n"
-            "Content-Type: application/json; charset=UTF-8\r\n"
-            "Cache-Control: no-cache\r\n"
-            "Content-Length: " +
-            to_string(answJson.dump().length()) +
-            "\r\n"
-            "Access-Control-Allow-Origin: *\r\n"
-            "Connection: close\r\n"
-            "\r\n";
-
-        S.append(answJson.dump());
+        S = GlobalsForHandlers::PrepareAnswer(RESP_TYPES::OK_200, answJson.dump());
     }
 
     mg_printf(conn, S.c_str());
@@ -232,36 +178,19 @@ int AuthHandler::ping(mg_connection *conn, void *cbdata)
             tm nowTm = *localtime(&now);
             char nowStr[31];
             strftime(nowStr, 30, "%Y-%m-%dT%H:%M:%S.000", &nowTm);
-            
+
             answJson["data"]["info"] = "OK";
             answJson["data"]["time"] = nowStr;
             answJson["result"] = "OK";
 
-            S = "HTTP/1.1 200 OK\r\n"
-                "Content-Type: application/json; charset=UTF-8\r\n"
-                "Cache-Control: no-cache\r\n"
-                "Content-Length: " +
-                to_string(answJson.dump().length()) +
-                "\r\n"
-                "Access-Control-Allow-Origin: *\r\n"
-                "Connection: close\r\n"
-                "\r\n";
-
-            S.append(answJson.dump());
+            S = GlobalsForHandlers::PrepareAnswer(RESP_TYPES::OK_200, answJson.dump());
         }
         else
         {
             answJson["result"] = "Error";
             answJson["data"]["info"] = "Unauthorized";
 
-            S = "HTTP/1.1 200\r\n"
-                "Content-Type: application/json; charset=UTF-8\r\n"
-                "Cache-Control: no-cache\r\n"
-                "Access-Control-Allow-Origin: *\r\n"
-                "Connection: close\r\n"
-                "\r\n";
-
-            S.append(answJson.dump());
+            S = GlobalsForHandlers::PrepareAnswer(RESP_TYPES::OK_200, answJson.dump());
         }
     }
     catch (exception &e)
@@ -271,17 +200,7 @@ int AuthHandler::ping(mg_connection *conn, void *cbdata)
         answJson["result"] = "Error";
         answJson["data"]["info"] = e.what();
 
-        S = "HTTP/1.1 200 OK\r\n"
-            "Content-Type: application/json; charset=UTF-8\r\n"
-            "Cache-Control: no-cache\r\n"
-            "Content-Length: " +
-            to_string(answJson.dump().length()) +
-            "\r\n"
-            "Access-Control-Allow-Origin: *\r\n"
-            "Connection: close\r\n"
-            "\r\n";
-
-        S.append(answJson.dump());
+        S = GlobalsForHandlers::PrepareAnswer(RESP_TYPES::OK_200, answJson.dump());
     }
 
     mg_printf(conn, S.c_str());

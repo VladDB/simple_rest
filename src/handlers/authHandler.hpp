@@ -1,15 +1,7 @@
 #pragma once
 
 #include <string>
-#include <vector>
-
-#include "civetweb.h"
-#include <nlohmann/json.hpp>
-#include "../components/base64.h"
-#include "../components/log.hpp"
-
-#include "../services/userService.hpp"
-#include "../services/sessionService.hpp"
+#include "globalsForHandlers.hpp"
 
 using namespace std;
 using json = nlohmann::json;
