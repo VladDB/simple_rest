@@ -17,6 +17,8 @@ struct SessionModel
     std::tm lastConnect;
 };
 
+constexpr int SESSION_LIFETIME = 10000; // millisec
+
 class SessionsService
 {
 public:

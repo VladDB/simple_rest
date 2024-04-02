@@ -133,21 +133,27 @@ void SessionsService::DeleteSession(std::string token)
 
 void SessionsService::CheckAllSessionsTime()
 {
-    // try
-    // {
-    //     if (MainDB.GetSession())
-    //     {
-    //         // create new user
-    //         *MainDB.sql << "DELETE FROM SESSION WHERE last_connect - CURRENT_TIMESTAMP > 5";
-    //     }
-    //     MainDB.FreeSession();
-    // }
-    // catch(const std::exception& e)
-    // {
-    //     logger->error("Error in SessionsService::CreateSession: {}", e.what());
-    //     std::string err = "Error while create session: ";
-    //     err.append(e.what());
-    //     throw std::runtime_error(err);
-    //     MainDB.FreeSession();
-    // }
+    try
+    {
+        if (MainDB.GetSession())
+        {
+            soci::indicator ind;
+            soci::rowset<soci::row> r = (MainDB.sql->prepare << "DELETE FROM SESSIONS WHERE EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - last_connect)) >= " +
+                               std::to_string(SESSION_LIFETIME / 1000) + " RETURNING id");
+
+            // find count of deleted sessions
+            auto diff = std::distance(r.begin(), r.end());
+            if (ind == soci::indicator::i_ok && diff)
+                logger->info("Deleted {} sessions", diff);
+        }
+        MainDB.FreeSession();
+    }
+    catch (const std::exception &e)
+    {
+        logger->error("Error in SessionsService::CreateSession: {}", e.what());
+        std::string err = "Error while create session: ";
+        err.append(e.what());
+        throw std::runtime_error(err);
+        MainDB.FreeSession();
+    }
 }

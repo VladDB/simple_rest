@@ -20,7 +20,7 @@ public:
     std::unique_ptr<soci::session> sql;
 
     TDB();
-    // ~TDB();
+    ~TDB();
 
     // creaete session and lock mutex
     bool GetSession();

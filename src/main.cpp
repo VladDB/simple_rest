@@ -107,9 +107,10 @@ int main(int, char **)
 
         while (key != 27)
         {
-            // Sleep(1000);
-            if (counter == 30)
+            Sleep(1000);
+            if (counter == 10)
             {
+                SessionsService::CheckAllSessionsTime();
                 logger->flush();
                 counter = 0;
             }

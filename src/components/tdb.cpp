@@ -11,6 +11,11 @@ TDB::TDB()
     pthread_mutex_init(&session_mutex, NULL);
 }
 
+TDB::~TDB()
+{
+    sql->close();
+}
+
 bool TDB::GetSession()
 {
     try
@@ -82,6 +87,7 @@ bool TDB::PrepareDb()
             {
                 // insert admin user
                 query_str = "INSERT INTO USERS (username, password, is_admin) VALUES ('admin', 'admin', true)";
+                *MainDB.sql << query_str;
             }
         }
         FreeSession();
