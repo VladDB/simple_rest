@@ -8,6 +8,8 @@ const string BASE_HEADERS_END = "\r\n";
 
 namespace GlobalsForHandlers
 {
+    using json = nlohmann::json;
+
     string PrepareAnswer(RESP_TYPES type, string body)
     {
         string answer = "HTTP/1.1 ";
@@ -37,4 +39,38 @@ namespace GlobalsForHandlers
 
         return answer;
     }
+
+    string TmToISO(tm timeTm)
+    {
+        char nowStr[31];
+        strftime(nowStr, 30, "%Y-%m-%dT%H:%M:%S.000", &timeTm);
+        return string(nowStr);
+    }
+
+    nlohmann::json UserModelToJson(UserModel user)
+    {
+        json jsonModel;
+        
+        jsonModel["id"] = user.id;
+        jsonModel["username"] = user.username;
+        jsonModel["ip_addr"] = user.ip_addr;
+        jsonModel["is_admin"] = user.is_admin;
+        jsonModel["create_at"] = TmToISO(user.create_at);
+        
+        return jsonModel;
+    }
+
+    nlohmann::json SessionModelToJson(SessionModel session)
+    {
+        json jsonModel;
+        
+        jsonModel["id"] = session.id;
+        jsonModel["user_id"] = session.userId;
+        jsonModel["token"] = session.token;
+        jsonModel["create_at"] = TmToISO(session.createAt);
+        jsonModel["last_connect"] = TmToISO(session.lastConnect);
+        
+        return jsonModel;
+    }
+
 } // namespace GlobalsForHandlers

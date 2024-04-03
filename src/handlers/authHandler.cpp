@@ -176,11 +176,9 @@ int AuthHandler::ping(mg_connection *conn, void *cbdata)
             // get current time
             time_t now = time(0);
             tm nowTm = *localtime(&now);
-            char nowStr[31];
-            strftime(nowStr, 30, "%Y-%m-%dT%H:%M:%S.000", &nowTm);
 
             answJson["data"]["info"] = "OK";
-            answJson["data"]["time"] = nowStr;
+            answJson["data"]["time"] = GlobalsForHandlers::TmToISO(nowTm);
             answJson["result"] = "OK";
 
             S = GlobalsForHandlers::PrepareAnswer(RESP_TYPES::OK_200, answJson.dump());

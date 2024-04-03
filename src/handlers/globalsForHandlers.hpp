@@ -21,8 +21,8 @@ enum RESP_TYPES
 
 namespace GlobalsForHandlers
 {
-    string PrepareAnswer(RESP_TYPES type, string body = nullptr);
-
-    // extern std::string UserModelToJson(UserModel user);
-    // extern std::string SessionModelToJson(SessionModel session);
+    extern string PrepareAnswer(RESP_TYPES type, string body = nullptr);
+    extern string TmToISO(tm timeTm);
+    extern nlohmann::json UserModelToJson(UserModel user);
+    extern nlohmann::json SessionModelToJson(SessionModel session);
 }

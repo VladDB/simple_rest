@@ -21,7 +21,7 @@ public:
     UserService(UserModel user) : _user(user) {};
     //~UserService();
 
-    std::string CreateUser(UserModel user);
+    static std::string CreateUser(UserModel user);
     
     static UserModel GetUserById(int id);
 
@@ -30,9 +30,9 @@ public:
     // if id = -1 user does not exist
     static int GetUserId(UserModel user);
     
-    void UpdateUser(UserModel updatedUser);
+    static void UpdateUser(UserModel updatedUser);
     
-    void DeleteUser(int id);
+    static void DeleteUser(int id);
     
     // check username and password, set id to model and update ip_addr in table
     static bool CheckUserPassword(UserModel user);

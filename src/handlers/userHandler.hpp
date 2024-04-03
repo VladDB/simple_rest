@@ -2,12 +2,12 @@
 
 #include "globalsForHandlers.hpp"
 
+using namespace std;
+using json = nlohmann::json;
+
 class UserHandler
 {
 public:
-    // UserHandler(/* args */);
-    // ~UserHandler();
-
     // create new user only for admin user
     static int CreateNewUser(mg_connection *conn, void *cbdata);
     // get info about session owner
