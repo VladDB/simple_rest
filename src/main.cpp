@@ -11,6 +11,7 @@
 
 #include "handlers/authHandler.hpp"
 #include "handlers/userHandler.hpp"
+#include "handlers/htmlHandler.hpp"
 #include "components/tdb.hpp"
 
 using namespace std;
@@ -59,15 +60,19 @@ void startHHTPServer(int port, int sslPort, string sslPath)
     }
 
     // auth
-    mg_set_request_handler(civetweb, "/login", AuthHandler::login, NULL);
+    mg_set_request_handler(civetweb, "/login",  AuthHandler::login, NULL);
     mg_set_request_handler(civetweb, "/logout", AuthHandler::logout, NULL);
-    mg_set_request_handler(civetweb, "/ping", AuthHandler::ping, NULL);
+    mg_set_request_handler(civetweb, "/ping",   AuthHandler::ping, NULL);
 
     // user handler
-    mg_set_request_handler(civetweb, "/user/create$", UserHandler::CreateNewUser, NULL);
-    mg_set_request_handler(civetweb, "/user/info/*$", UserHandler::GetUserInfo, NULL);
-    mg_set_request_handler(civetweb, "/user/update$", UserHandler::UpdateCurrentUser, NULL);
+    mg_set_request_handler(civetweb, "/user/create$",   UserHandler::CreateNewUser, NULL);
+    mg_set_request_handler(civetweb, "/user/info/*$",   UserHandler::GetUserInfo, NULL);
+    mg_set_request_handler(civetweb, "/user/update$",   UserHandler::UpdateCurrentUser, NULL);
     mg_set_request_handler(civetweb, "/user/delete/*$", UserHandler::DeleteUserById, NULL);
+
+    // html handler
+    mg_set_request_handler(civetweb, "/html/users$", HtmlHandler::AllUsersPage, NULL);
+    mg_set_request_handler(civetweb, "/html/sessions/*$", HtmlHandler::UserSessionsPage, NULL);
 }
 
 void StopHTTPserver(void)
@@ -85,6 +90,7 @@ int main(int, char **)
 {
     try
     {
+        printf("locale: %s\n", std::setlocale(LC_ALL, NULL));
         init_logger();
         if (!logger)
             printf("Logger does not init");

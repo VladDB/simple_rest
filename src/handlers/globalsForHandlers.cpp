@@ -50,27 +50,43 @@ namespace GlobalsForHandlers
     nlohmann::json UserModelToJson(UserModel user)
     {
         json jsonModel;
-        
+
         jsonModel["id"] = user.id;
         jsonModel["username"] = user.username;
         jsonModel["ip_addr"] = user.ip_addr;
         jsonModel["is_admin"] = user.is_admin;
         jsonModel["create_at"] = TmToISO(user.create_at);
-        
+
         return jsonModel;
     }
 
     nlohmann::json SessionModelToJson(SessionModel session)
     {
         json jsonModel;
-        
+
         jsonModel["id"] = session.id;
         jsonModel["user_id"] = session.userId;
         jsonModel["token"] = session.token;
         jsonModel["create_at"] = TmToISO(session.createAt);
         jsonModel["last_connect"] = TmToISO(session.lastConnect);
-        
+
         return jsonModel;
+    }
+
+    int GetUserIdFromUrl(string url)
+    {
+        int id = -1;
+        try
+        {
+            size_t pos = url.find_last_of('/');
+            if (pos != string::npos)
+                id = stoi(url.substr(pos + 1));
+        }
+        catch (const std::exception &e)
+        {
+            logger->error("Error in UserHandler::GetUserInfo: {}", e.what());
+        }
+        return id;
     }
 
 } // namespace GlobalsForHandlers

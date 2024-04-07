@@ -25,4 +25,5 @@ namespace GlobalsForHandlers
     extern string TmToISO(tm timeTm);
     extern nlohmann::json UserModelToJson(UserModel user);
     extern nlohmann::json SessionModelToJson(SessionModel session);
+    extern int GetUserIdFromUrl(string url);
 }

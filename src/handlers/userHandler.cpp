@@ -1,21 +1,5 @@
 #include "userHandler.hpp"
 
-int GetUserIdFromUrl(string url)
-{
-    int id = -1;
-    try
-    {
-        size_t pos = url.find_last_of('/');
-        if (pos != string::npos)
-            id = stoi(url.substr(pos + 1));
-    }
-    catch (const std::exception &e)
-    {
-        logger->error("Error in UserHandler::GetUserInfo: {}", e.what());
-    }
-    return id;
-}
-
 int UserHandler::CreateNewUser(mg_connection *conn, void *cbdata)
 {
     json answJson;
@@ -143,7 +127,7 @@ int UserHandler::GetUserInfo(mg_connection *conn, void *cbdata)
 
         // get user id from url
         string uri = mg_get_request_info(conn)->request_uri;
-        int userId = GetUserIdFromUrl(uri);
+        int userId = GlobalsForHandlers::GetUserIdFromUrl(uri);
         if (userId == -1)
             throw runtime_error("Incorrect user id");
 
@@ -314,7 +298,7 @@ int UserHandler::DeleteUserById(mg_connection *conn, void *cbdata)
 
         // get user id from url
         string uri = mg_get_request_info(conn)->request_uri;
-        int userId = GetUserIdFromUrl(uri);
+        int userId = GlobalsForHandlers::GetUserIdFromUrl(uri);
         if (userId == -1)
             throw runtime_error("Incorrect user id");
 

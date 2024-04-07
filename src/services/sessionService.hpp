@@ -36,4 +36,6 @@ public:
     
     // delete all session with expire lifetime
     static void CheckAllSessionsTime();
+
+    static std::vector<SessionModel> GetAllUserSessions(int userId);
 };

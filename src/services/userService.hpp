@@ -26,6 +26,8 @@ public:
     static UserModel GetUserById(int id);
 
     static UserModel GetUserByToken(std::string token);
+
+    static std::vector<UserModel> GetAllUsers();
     
     // if id = -1 user does not exist
     static int GetUserId(UserModel user);

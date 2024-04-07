@@ -58,9 +58,14 @@ set(AUTH_HANDLER_SRC ${HANDLERS_DIR}/authHandler.hpp
 set(USER_HANDLER_SRC ${HANDLERS_DIR}/userHandler.hpp
                      ${HANDLERS_DIR}/userHandler.cpp)
 
+# user handler
+set(HTML_HANDLER_SRC ${HANDLERS_DIR}/htmlHandler.hpp
+                     ${HANDLERS_DIR}/htmlHandler.cpp)
+
 set(HANDLERS_SRC ${GLOBAL_HANDLER_SRC}
                  ${AUTH_HANDLER_SRC}
-                 ${USER_HANDLER_SRC})
+                 ${USER_HANDLER_SRC}
+                 ${HTML_HANDLER_SRC})
 
 
 # Find SOCI package

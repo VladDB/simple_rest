@@ -9,8 +9,6 @@ using json = nlohmann::json;
 class AuthHandler
 {
 public:
-    AuthHandler();
-
     static int login(mg_connection *conn, void *cbdata);
     static int logout(mg_connection *conn, void *cbdata);
     static int ping(mg_connection *conn, void *cbdata);

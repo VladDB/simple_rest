@@ -157,3 +157,45 @@ void SessionsService::CheckAllSessionsTime()
         throw std::runtime_error(err);
     }
 }
+
+std::vector<SessionModel> SessionsService::GetAllUserSessions(int userId)
+{
+    std::vector<SessionModel> sessions;
+    try
+    {
+        if (MainDB.GetSession())
+        {
+            soci::indicator indId;
+            ;
+            std::string token;
+            int id;
+            tm createTm, lastTm;
+            soci::statement st = (MainDB.sql->prepare << "SELECT id, token, last_connect, create_at FROM SESSIONS WHERE user_id = :P0",
+                                  soci::use(userId), soci::into(id, indId), soci::into(token),
+                                  soci::into(lastTm), soci::into(createTm));
+            st.execute();
+            while (st.fetch())
+            {
+                if (indId == soci::indicator::i_ok)
+                {
+                    SessionModel session;
+
+                    session.id = id;
+                    session.token = token;
+                    session.userId = userId;
+                    session.lastConnect = lastTm;
+                    session.createAt = createTm;
+
+                    sessions.push_back(session);
+                }
+            }
+        }
+        MainDB.FreeSession();
+    }
+    catch (const std::exception &e)
+    {
+        logger->error("Error in SessionsService::GetAllUserSessions: {}", e.what());
+        MainDB.FreeSession();
+    }
+    return sessions;
+}

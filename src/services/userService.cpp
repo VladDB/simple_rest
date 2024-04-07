@@ -112,6 +112,49 @@ UserModel UserService::GetUserByToken(std::string token)
     return user;
 }
 
+std::vector<UserModel> UserService::GetAllUsers()
+{
+    std::vector<UserModel> users{};
+    try
+    {
+        if (MainDB.GetSession())
+        {
+            soci::indicator indName, indId, indIp, indAdmin, indTime;
+            ;
+            std::string name, ip_addr;
+            int id, isAdmin;
+            tm createTm;
+            soci::statement st = (MainDB.sql->prepare << "SELECT id, username, ip_addr, is_admin, create_at FROM USERS",
+                                  soci::into(id, indId), soci::into(name, indName), soci::into(ip_addr, indIp),
+                                  soci::into(isAdmin, indAdmin), soci::into(createTm, indTime));
+            st.execute();
+            while (st.fetch())
+            {
+                if (indId == soci::indicator::i_ok)
+                {
+                    UserModel user;
+
+                    user.id = id;
+                    user.username = name;
+                    user.ip_addr = indId == soci::indicator::i_ok ? ip_addr : "unknown";
+                    user.is_admin = isAdmin == 1 ? true : false;
+                    user.create_at = createTm;
+
+                    users.push_back(user);
+                }
+            }
+        }
+        MainDB.FreeSession();
+    }
+    catch (const std::exception &e)
+    {
+        logger->error("Error in UserService::GetAllUsers: {}", e.what());
+        MainDB.FreeSession();
+    }
+
+    return users;
+}
+
 int UserService::GetUserId(UserModel user)
 {
     int id = 0;
