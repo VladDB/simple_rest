@@ -41,7 +41,7 @@ int UserHandler::CreateNewUser(mg_connection *conn, void *cbdata)
         // get user ID, check if he exist
         user = UserService::GetUserByToken(inToken);
         if (user.id < 0)
-            throw runtime_error("User does not exist");
+            throw runtime_error("Request from unknown user. Only admin user can send this request.");
 
         // check user address
         const mg_request_info *info = mg_get_request_info(conn);
@@ -64,23 +64,31 @@ int UserHandler::CreateNewUser(mg_connection *conn, void *cbdata)
                 break;
             res.assign(buf, buffSize);
         }
-
         delete buf;
-        reqJson = json::parse(res);
-
-        UserModel newUser;
-        if (reqJson["username"].is_null() && reqJson["password"].is_null())
-            throw runtime_error("Empty username or password");
-
-        newUser.username = reqJson["username"].get<string>();
-        newUser.password = reqJson["password"].get<string>();
-        newUser.is_admin = reqJson["is_admin"].get<bool>();
 
         if (user.is_admin && SessionsService::CheckSession(inToken, user.ip_addr))
         {
-            // update user
-            answJson["result"] = "OK";
-            answJson["data"]["info"] = UserService::CreateUser(newUser);
+            if (res.empty())
+            {
+                answJson["result"] = "Error";
+                answJson["data"]["info"] = "Empty request body";
+            }
+            else
+            {
+                reqJson = json::parse(res);
+
+                UserModel newUser;
+                if (reqJson["username"].is_null() && reqJson["password"].is_null())
+                    throw runtime_error("Empty username or password");
+
+                newUser.username = reqJson["username"].get<string>();
+                newUser.password = reqJson["password"].get<string>();
+                newUser.is_admin = reqJson["is_admin"].is_null() ? false : reqJson["is_admin"].get<bool>();
+
+                // update user
+                answJson["result"] = "OK";
+                answJson["data"]["info"] = UserService::CreateUser(newUser);
+            }
 
             S = GlobalsForHandlers::PrepareAnswer(RESP_TYPES::OK_200, answJson.dump());
         }
@@ -89,12 +97,12 @@ int UserHandler::CreateNewUser(mg_connection *conn, void *cbdata)
             answJson["result"] = "Error";
             answJson["data"]["info"] = "Unauthorized";
 
-            S = GlobalsForHandlers::PrepareAnswer(RESP_TYPES::OK_200, answJson.dump());
+            S = GlobalsForHandlers::PrepareAnswer(RESP_TYPES::Unauthorized_401, answJson.dump());
         }
     }
     catch (exception &e)
     {
-        logger->error("AuthHandler::CreateNewUser: {}", e.what());
+        logger->error("UserHandler::CreateNewUser: {}", e.what());
 
         answJson["result"] = "Error";
         answJson["data"]["info"] = e.what();
@@ -128,11 +136,6 @@ int UserHandler::GetUserInfo(mg_connection *conn, void *cbdata)
         if (inToken.empty())
             throw runtime_error("Empty token");
 
-        // get user ID, check if he exist
-        user = UserService::GetUserByToken(inToken);
-        if (user.id < 0)
-            throw runtime_error("User does not exist");
-
         // check user address
         const mg_request_info *info = mg_get_request_info(conn);
         if (info->remote_addr != NULL)
@@ -148,7 +151,13 @@ int UserHandler::GetUserInfo(mg_connection *conn, void *cbdata)
         {
             // get user info
             UserModel userInfo = UserService::GetUserById(userId);
-            answJson = GlobalsForHandlers::UserModelToJson(userInfo);
+            if (userInfo.id == -1)
+            {
+                answJson["result"] = "Error";
+                answJson["data"]["info"] = "User with id = " + to_string(userId) + " does not exist";
+            }
+            else
+                answJson = GlobalsForHandlers::UserModelToJson(userInfo);
 
             S = GlobalsForHandlers::PrepareAnswer(RESP_TYPES::OK_200, answJson.dump());
         }
@@ -157,12 +166,12 @@ int UserHandler::GetUserInfo(mg_connection *conn, void *cbdata)
             answJson["result"] = "Error";
             answJson["data"]["info"] = "Unauthorized";
 
-            S = GlobalsForHandlers::PrepareAnswer(RESP_TYPES::OK_200, answJson.dump());
+            S = GlobalsForHandlers::PrepareAnswer(RESP_TYPES::Unauthorized_401, answJson.dump());
         }
     }
     catch (exception &e)
     {
-        logger->error("AuthHandler::ping: {}", e.what());
+        logger->error("UserHandler::GetUserInfo: {}", e.what());
 
         answJson["result"] = "Error";
         answJson["data"]["info"] = e.what();
@@ -196,11 +205,6 @@ int UserHandler::UpdateCurrentUser(mg_connection *conn, void *cbdata)
         if (inToken.empty())
             throw runtime_error("Empty token");
 
-        // get user ID, check if he exist
-        user = UserService::GetUserByToken(inToken);
-        if (user.id < 0)
-            throw runtime_error("User does not exist");
-
         // check user address
         const mg_request_info *info = mg_get_request_info(conn);
         if (info->remote_addr != NULL)
@@ -222,22 +226,35 @@ int UserHandler::UpdateCurrentUser(mg_connection *conn, void *cbdata)
                 break;
             res.assign(buf, buffSize);
         }
-
         delete buf;
-        reqJson = json::parse(res);
-
-        UserModel updatedUser;
-        updatedUser.id = user.id;
-        updatedUser.username = reqJson["username"].is_null() ? user.username : reqJson["username"].get<string>();
-        updatedUser.password = reqJson["password"].is_null() ? user.password : reqJson["password"].get<string>();
-        updatedUser.is_admin = reqJson["is_admin"].is_null() ? user.is_admin : reqJson["is_admin"].get<bool>();
 
         if (SessionsService::CheckSession(inToken, user.ip_addr))
         {
-            // update user
-            UserService::UpdateUser(updatedUser);
-            answJson["result"] = "OK";
-            answJson["data"]["info"] = "User was updated";
+            if (res.empty())
+            {
+                answJson["result"] = "Error";
+                answJson["data"]["info"] = "Empty request body";
+            }
+            else
+            {
+                // get user ID, check if he exist
+                user = UserService::GetUserByToken(inToken);
+                if (user.id < 0)
+                    throw runtime_error("User does not exist");
+
+                // parse request body
+                UserModel updatedUser;
+                reqJson = json::parse(res);
+                updatedUser.id = user.id;
+                updatedUser.username = reqJson["username"].is_null() ? user.username : reqJson["username"].get<string>();
+                updatedUser.password = reqJson["password"].is_null() ? user.password : reqJson["password"].get<string>();
+                updatedUser.is_admin = reqJson["is_admin"].is_null() ? user.is_admin : reqJson["is_admin"].get<bool>();
+
+                // update user
+                UserService::UpdateUser(updatedUser);
+                answJson["result"] = "OK";
+                answJson["data"]["info"] = "User was updated";
+            }
 
             S = GlobalsForHandlers::PrepareAnswer(RESP_TYPES::OK_200, answJson.dump());
         }
@@ -246,12 +263,12 @@ int UserHandler::UpdateCurrentUser(mg_connection *conn, void *cbdata)
             answJson["result"] = "Error";
             answJson["data"]["info"] = "Unauthorized";
 
-            S = GlobalsForHandlers::PrepareAnswer(RESP_TYPES::OK_200, answJson.dump());
+            S = GlobalsForHandlers::PrepareAnswer(RESP_TYPES::Unauthorized_401, answJson.dump());
         }
     }
     catch (exception &e)
     {
-        logger->error("AuthHandler::UpdateCurrentUser: {}", e.what());
+        logger->error("UserHandler::UpdateCurrentUser: {}", e.what());
 
         answJson["result"] = "Error";
         answJson["data"]["info"] = e.what();
@@ -288,7 +305,7 @@ int UserHandler::DeleteUserById(mg_connection *conn, void *cbdata)
         // get user ID, check if he exist
         user = UserService::GetUserByToken(inToken);
         if (user.id < 0)
-            throw runtime_error("User does not exist");
+            throw runtime_error("Request from unknown user. Only admin user can send this request.");
 
         // check user address
         const mg_request_info *info = mg_get_request_info(conn);
@@ -315,12 +332,12 @@ int UserHandler::DeleteUserById(mg_connection *conn, void *cbdata)
             answJson["result"] = "Error";
             answJson["data"]["info"] = "Unauthorized";
 
-            S = GlobalsForHandlers::PrepareAnswer(RESP_TYPES::OK_200, answJson.dump());
+            S = GlobalsForHandlers::PrepareAnswer(RESP_TYPES::Unauthorized_401, answJson.dump());
         }
     }
     catch (exception &e)
     {
-        logger->error("AuthHandler::UpdateCurrentUser: {}", e.what());
+        logger->error("UserHandler::DeleteUserById: {}", e.what());
 
         answJson["result"] = "Error";
         answJson["data"]["info"] = e.what();

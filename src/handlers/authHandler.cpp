@@ -54,7 +54,7 @@ int AuthHandler::login(mg_connection *conn, void *cbdata)
 
             answJson["result"] = "Error";
             answJson["data"]["info"] = "Incorrect password or username, ACCESS DENIED";
-            
+
             S = GlobalsForHandlers::PrepareAnswer(RESP_TYPES::Unauthorized_401, answJson.dump());
         }
     }
@@ -93,11 +93,6 @@ int AuthHandler::logout(mg_connection *conn, void *cbdata)
 
         if (inToken.empty())
             throw std::runtime_error("Empty Pragma (token)");
-
-        // get user ID, check if he exist
-        user = UserService::GetUserByToken(inToken);
-        if (user.id < 0)
-            throw runtime_error("User does not exist");
 
         // check user address
         const mg_request_info *info = mg_get_request_info(conn);
@@ -158,18 +153,10 @@ int AuthHandler::ping(mg_connection *conn, void *cbdata)
                 inToken = Pragma.substr(pos + 1);
         }
 
-        if (!inToken.empty())
-        {
-            // get user ID, check if he exist
-            user = UserService::GetUserByToken(inToken);
-            if (user.id < 0)
-                throw runtime_error("User does not exist");
-
-            // check user address
-            const mg_request_info *info = mg_get_request_info(conn);
-            if (info->remote_addr != NULL)
-                user.ip_addr = info->remote_addr;
-        }
+        // check user address
+        const mg_request_info *info = mg_get_request_info(conn);
+        if (info->remote_addr != NULL)
+            user.ip_addr = info->remote_addr;
 
         if (SessionsService::CheckSession(inToken, user.ip_addr))
         {

@@ -15,14 +15,14 @@ std::string UserService::CreateUser(UserModel user)
             st.execute();
             st.fetch();
 
-            if (ind == soci::indicator::i_null)
+            if (ind == soci::indicator::i_ok)
             {
                 result = "The user has already exist";
             }
             else
             {
                 // create new user
-                *MainDB.sql << "INSERT INTO USERS (username, password) VALUES (:P0, P1)",
+                *MainDB.sql << "INSERT INTO USERS (username, password) VALUES (:P0, :P1)",
                     soci::use(user.username), soci::use(user.password);
                 result = "The user is created";
             }
