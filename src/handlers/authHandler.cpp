@@ -1,9 +1,12 @@
 #include "authHandler.hpp"
 
+using namespace std;
+using json = nlohmann::json;
+
 int AuthHandler::login(mg_connection *conn, void *cbdata)
 {
     json answJson;
-    string S = "";
+    string S{""};
     try
     {
         UserModel user;
@@ -13,17 +16,17 @@ int AuthHandler::login(mg_connection *conn, void *cbdata)
         {
             // get username and password
             const string forDecode = header;
-            size_t pos = forDecode.find(" ");
+            size_t pos = forDecode.find(' ');
             vector<BYTE> decodeData = base64_decode(forDecode.substr(pos + 1));
             string decode(decodeData.begin(), decodeData.end());
-            pos = decode.find(":");
+            pos = decode.find(':');
             user.username = decode.substr(0, pos);
             user.password = decode.substr(pos + 1);
         }
 
         const mg_request_info *info = mg_get_request_info(conn);
         // check user address
-        if (info->remote_addr != NULL)
+        if (info != NULL)
             user.ip_addr = info->remote_addr;
         else
             user.ip_addr = "Unknown";
@@ -75,28 +78,23 @@ int AuthHandler::login(mg_connection *conn, void *cbdata)
 int AuthHandler::logout(mg_connection *conn, void *cbdata)
 {
     json answJson;
-    string S = "";
+    string S{""};
     try
     {
         UserModel user;
 
-        string inToken = "";
+        string inToken{""};
 
         const char *header = mg_get_header(conn, "Pragma");
         if (header != NULL)
-        {
-            const string Pragma = header;
-            size_t pos = Pragma.find_first_of("=");
-            if (pos != string::npos)
-                inToken = Pragma.substr(pos + 1);
-        }
+            inToken = GlobalsForHandlers::GetTokenFromHeader(header);
 
         if (inToken.empty())
             throw std::runtime_error("Empty Pragma (token)");
 
         // check user address
         const mg_request_info *info = mg_get_request_info(conn);
-        if (info->remote_addr != NULL)
+        if (info != NULL)
             user.ip_addr = info->remote_addr;
 
         if (SessionsService::CheckSession(inToken, user.ip_addr))
@@ -137,25 +135,20 @@ int AuthHandler::logout(mg_connection *conn, void *cbdata)
 int AuthHandler::ping(mg_connection *conn, void *cbdata)
 {
     json answJson;
-    string S = "";
+    string S{""};
     try
     {
         UserModel user;
 
-        string inToken = "";
+        string inToken{""};
 
         const char *header = mg_get_header(conn, "Pragma");
         if (header != NULL)
-        {
-            const string Pragma = header;
-            size_t pos = Pragma.find_first_of("=");
-            if (pos != string::npos)
-                inToken = Pragma.substr(pos + 1);
-        }
+            inToken = GlobalsForHandlers::GetTokenFromHeader(header);
 
         // check user address
         const mg_request_info *info = mg_get_request_info(conn);
-        if (info->remote_addr != NULL)
+        if (info != NULL)
             user.ip_addr = info->remote_addr;
 
         if (SessionsService::CheckSession(inToken, user.ip_addr))

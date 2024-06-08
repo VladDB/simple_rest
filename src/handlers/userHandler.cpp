@@ -1,23 +1,21 @@
 #include "userHandler.hpp"
 
+using namespace std;
+using json = nlohmann::json;
+
 int UserHandler::CreateNewUser(mg_connection *conn, void *cbdata)
 {
     json answJson;
-    string S = "";
+    string S{""};
     try
     {
         UserModel user;
 
-        string inToken = "";
+        std::string inToken{""};
 
         const char *header = mg_get_header(conn, "Pragma");
         if (header != NULL)
-        {
-            const string Pragma = header;
-            size_t pos = Pragma.find_first_of("=");
-            if (pos != string::npos)
-                inToken = Pragma.substr(pos + 1);
-        }
+            inToken = GlobalsForHandlers::GetTokenFromHeader(header);
 
         if (inToken.empty())
             throw runtime_error("Empty token");
@@ -29,7 +27,7 @@ int UserHandler::CreateNewUser(mg_connection *conn, void *cbdata)
 
         // check user address
         const mg_request_info *info = mg_get_request_info(conn);
-        if (info->remote_addr != NULL)
+        if (info != NULL)
             user.ip_addr = info->remote_addr;
 
         // get request body
@@ -40,7 +38,7 @@ int UserHandler::CreateNewUser(mg_connection *conn, void *cbdata)
 
         char *buf = new char[buffSize];
         json reqJson;
-        string res;
+        string res{""};
         for (;;)
         {
             int ret = mg_read(conn, buf, buffSize);
@@ -48,7 +46,7 @@ int UserHandler::CreateNewUser(mg_connection *conn, void *cbdata)
                 break;
             res.assign(buf, buffSize);
         }
-        delete buf;
+        delete[] buf;
 
         if (user.is_admin && SessionsService::CheckSession(inToken, user.ip_addr))
         {
@@ -101,28 +99,23 @@ int UserHandler::CreateNewUser(mg_connection *conn, void *cbdata)
 int UserHandler::GetUserInfo(mg_connection *conn, void *cbdata)
 {
     json answJson;
-    string S = "";
+    string S{""};
     try
     {
         UserModel user;
 
-        string inToken = "";
+        string inToken{""};
 
         const char *header = mg_get_header(conn, "Pragma");
         if (header != NULL)
-        {
-            const string Pragma = header;
-            size_t pos = Pragma.find_first_of("=");
-            if (pos != string::npos)
-                inToken = Pragma.substr(pos + 1);
-        }
+            inToken = GlobalsForHandlers::GetTokenFromHeader(header);
 
         if (inToken.empty())
             throw runtime_error("Empty token");
 
         // check user address
         const mg_request_info *info = mg_get_request_info(conn);
-        if (info->remote_addr != NULL)
+        if (info != NULL)
             user.ip_addr = info->remote_addr;
 
         // get user id from url
@@ -170,21 +163,16 @@ int UserHandler::GetUserInfo(mg_connection *conn, void *cbdata)
 int UserHandler::UpdateCurrentUser(mg_connection *conn, void *cbdata)
 {
     json answJson;
-    string S = "";
+    string S{""};
     try
     {
         UserModel user;
 
-        string inToken = "";
+        string inToken{""};
 
         const char *header = mg_get_header(conn, "Pragma");
         if (header != NULL)
-        {
-            const string Pragma = header;
-            size_t pos = Pragma.find_first_of("=");
-            if (pos != string::npos)
-                inToken = Pragma.substr(pos + 1);
-        }
+            inToken = GlobalsForHandlers::GetTokenFromHeader(header);
 
         if (inToken.empty())
             throw runtime_error("Empty token");
@@ -202,7 +190,7 @@ int UserHandler::UpdateCurrentUser(mg_connection *conn, void *cbdata)
 
         char *buf = new char[buffSize];
         json reqJson;
-        string res;
+        string res{""};
         for (;;)
         {
             int ret = mg_read(conn, buf, buffSize);
@@ -210,7 +198,7 @@ int UserHandler::UpdateCurrentUser(mg_connection *conn, void *cbdata)
                 break;
             res.assign(buf, buffSize);
         }
-        delete buf;
+        delete[] buf;
 
         if (SessionsService::CheckSession(inToken, user.ip_addr))
         {
@@ -267,21 +255,16 @@ int UserHandler::UpdateCurrentUser(mg_connection *conn, void *cbdata)
 int UserHandler::DeleteUserById(mg_connection *conn, void *cbdata)
 {
     json answJson;
-    string S = "";
+    string S{""};
     try
     {
         UserModel user;
 
-        string inToken = "";
+        string inToken{""};
 
         const char *header = mg_get_header(conn, "Pragma");
         if (header != NULL)
-        {
-            const string Pragma = header;
-            size_t pos = Pragma.find_first_of("=");
-            if (pos != string::npos)
-                inToken = Pragma.substr(pos + 1);
-        }
+            inToken = GlobalsForHandlers::GetTokenFromHeader(header);
 
         if (inToken.empty())
             throw runtime_error("Empty token");
@@ -293,7 +276,7 @@ int UserHandler::DeleteUserById(mg_connection *conn, void *cbdata)
 
         // check user address
         const mg_request_info *info = mg_get_request_info(conn);
-        if (info->remote_addr != NULL)
+        if (info != NULL)
             user.ip_addr = info->remote_addr;
 
         // get user id from url

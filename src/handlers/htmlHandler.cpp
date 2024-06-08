@@ -1,6 +1,8 @@
 #include "htmlHandler.hpp"
 
-string HtmlHandler::PrepareHtmlPage(string body, string pageTitle, bool startLink)
+using namespace std;
+
+string HtmlHandler::PrepareHtmlPage(const string &body, const string &pageTitle, bool startLink)
 {
     std::string S = "HTTP/1.1 200 OK\r\n"
                     "Content-Type: text/html; charset=windows-1251\r\n"
@@ -35,7 +37,7 @@ string HtmlHandler::PrepareHtmlPage(string body, string pageTitle, bool startLin
 
 int HtmlHandler::AllUsersPage(mg_connection *conn, void *cbdata)
 {
-    string table;
+    string table{""};
     vector<UserModel> users = UserService::GetAllUsers();
     if (users.empty())
         table = "No users in DB";
@@ -86,7 +88,7 @@ int HtmlHandler::UserSessionsPage(mg_connection *conn, void *cbdata)
 {
     string uri = mg_get_request_info(conn)->request_uri;
     int userId = GlobalsForHandlers::GetUserIdFromUrl(uri);
-    string table;
+    string table{""};
     vector<SessionModel> sessions = SessionsService::GetAllUserSessions(userId);
     if (sessions.empty())
         table = "<h2>User does not have sessions</h2>";

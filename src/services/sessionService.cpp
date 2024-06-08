@@ -19,7 +19,7 @@ std::string SessionsService::CreateSession(SessionModel session, std::string ip)
     RpcStringFreeA(&str);
 #endif // __linux__
 
-    // inser in db
+    // insert in db
     std::string newToken = "";
     try
     {
@@ -137,7 +137,7 @@ void SessionsService::CheckAllSessionsTime()
     {
         if (MainDB.GetSession())
         {
-            soci::indicator ind;
+            soci::indicator ind = soci::indicator::i_ok;
             soci::rowset<soci::row> r = (MainDB.sql->prepare << "DELETE FROM SESSIONS WHERE EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - last_connect)) >= " +
                                std::to_string(SESSION_LIFETIME / 1000) + " RETURNING id");
 

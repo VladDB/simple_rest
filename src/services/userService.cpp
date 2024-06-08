@@ -59,8 +59,6 @@ UserModel UserService::GetUserById(int id)
 
             if (indAdm == soci::indicator::i_ok)
                 user.is_admin = adminCheck == 0 ? false : true;
-            else
-                user.is_admin = false;
         }
         MainDB.FreeSession();
     }
@@ -95,8 +93,6 @@ UserModel UserService::GetUserByToken(std::string token)
 
             if (indAdm == soci::indicator::i_ok)
                 user.is_admin = adminCheck == 0 ? false : true;
-            else
-                user.is_admin = false;
         }
         MainDB.FreeSession();
     }
@@ -136,7 +132,7 @@ std::vector<UserModel> UserService::GetAllUsers()
 
                     user.id = id;
                     user.username = name;
-                    user.ip_addr = indId == soci::indicator::i_ok ? ip_addr : "unknown";
+                    user.ip_addr = ip_addr.empty() ? "unknown" : ip_addr;
                     user.is_admin = isAdmin == 1 ? true : false;
                     user.create_at = createTm;
 

@@ -1,18 +1,18 @@
 #include "globalsForHandlers.hpp"
 
-const string BASE_HEADERS = "Cache-Control: no-cache\r\n"
+const std::string BASE_HEADERS = "Cache-Control: no-cache\r\n"
                             "Access-Control-Allow-Origin: *\r\n"
                             "Connection: close\r\n";
 
-const string BASE_HEADERS_END = "\r\n";
+const std::string BASE_HEADERS_END = "\r\n";
 
 namespace GlobalsForHandlers
 {
     using json = nlohmann::json;
 
-    string PrepareAnswer(RESP_TYPES type, string body)
+    std::string PrepareAnswer(RESP_TYPES type, const std::string &body)
     {
-        string answer = "HTTP/1.1 ";
+        std::string answer = "HTTP/1.1 ";
         switch (type)
         {
         case RESP_TYPES::OK_200:
@@ -30,7 +30,7 @@ namespace GlobalsForHandlers
         if (!body.empty())
         {
             answer.append("Content-Type: application/json; charset=UTF-8\r\n");
-            answer.append("Content-Length: ").append(to_string(body.length())).append("\r\n");
+            answer.append("Content-Length: ").append(std::to_string(body.length())).append("\r\n");
             answer.append(BASE_HEADERS_END);
             answer.append(body);
         }
@@ -40,14 +40,14 @@ namespace GlobalsForHandlers
         return answer;
     }
 
-    string TmToISO(tm timeTm)
+    std::string TmToISO(tm timeTm)
     {
         char nowStr[31];
         strftime(nowStr, 30, "%Y-%m-%dT%H:%M:%S.000", &timeTm);
-        return string(nowStr);
+        return std::string{nowStr};
     }
 
-    nlohmann::json UserModelToJson(UserModel user)
+    nlohmann::json UserModelToJson(const UserModel &user)
     {
         json jsonModel;
 
@@ -60,7 +60,7 @@ namespace GlobalsForHandlers
         return jsonModel;
     }
 
-    nlohmann::json SessionModelToJson(SessionModel session)
+    nlohmann::json SessionModelToJson(const SessionModel &session)
     {
         json jsonModel;
 
@@ -73,13 +73,13 @@ namespace GlobalsForHandlers
         return jsonModel;
     }
 
-    int GetUserIdFromUrl(string url)
+    int GetUserIdFromUrl(const std::string &url)
     {
         int id = -1;
         try
         {
             size_t pos = url.find_last_of('/');
-            if (pos != string::npos)
+            if (pos != std::string::npos)
                 id = stoi(url.substr(pos + 1));
         }
         catch (const std::exception &e)
@@ -87,6 +87,18 @@ namespace GlobalsForHandlers
             logger->error("Error in UserHandler::GetUserInfo: {}", e.what());
         }
         return id;
+    }
+
+    std::string GetTokenFromHeader(const std::string &header)
+    {
+        std::string token{""};
+        if (!header.empty())
+        {
+            size_t pos = header.find_first_of('=');
+            if (pos != std::string::npos)
+                token = header.substr(pos + 1);
+        }
+        return token;
     }
 
 } // namespace GlobalsForHandlers

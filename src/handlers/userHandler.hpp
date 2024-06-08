@@ -2,9 +2,6 @@
 
 #include "globalsForHandlers.hpp"
 
-using namespace std;
-using json = nlohmann::json;
-
 class UserHandler
 {
 public:

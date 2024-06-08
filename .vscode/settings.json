@@ -74,6 +74,7 @@
         "typeinfo": "cpp",
         "valarray": "cpp",
         "variant": "cpp",
-        "*.rh": "cpp"
+        "*.rh": "cpp",
+        "xstring": "cpp"
     }
 }

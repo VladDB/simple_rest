@@ -3,9 +3,6 @@
 #include <string>
 #include "globalsForHandlers.hpp"
 
-using namespace std;
-using json = nlohmann::json;
-
 class AuthHandler
 {
 public:
